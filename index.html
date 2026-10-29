@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0906">
+<title>Шашлык Рыба Пивко — Меню</title>
+<style>
+  :root{
+    --bg:#0b0906;
+    --bg2:#141009;
+    --card:#1a1510;
+    --card2:#221a11;
+    --line:#3a2c17;
+    --gold:#f5b942;
+    --gold2:#ffd87a;
+    --gold-deep:#c8881c;
+    --fire:#ff6a00;
+    --text:#f3e9d8;
+    --muted:#a2947c;
+    --ok:#2fb568;
+    --safe-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(120% 60% at 50% 0%, #2a1605 0%, rgba(42,22,5,0) 60%),
+      linear-gradient(180deg,#0b0906 0%, #100c07 100%) fixed;
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.35;
+    padding:0 16px calc(104px + var(--safe-b));
+    max-width:560px;margin:0 auto;
+    overscroll-behavior-y:none;
+  }
+
+  /* ---------- Шапка ---------- */
+  header{text-align:center;padding:26px 0 14px}
+  .flame{font-size:28px;line-height:1}
+  h1{
+    margin:6px 0 2px;font-size:30px;line-height:1.05;letter-spacing:.5px;
+    font-weight:800;text-transform:uppercase;
+    background:linear-gradient(180deg,#fff2cf 0%,var(--gold2) 35%,var(--gold) 60%,var(--gold-deep) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 28px rgba(245,185,66,.25);
+  }
+  .sub{color:var(--muted);font-size:12.5px;letter-spacing:2px;text-transform:uppercase;margin-top:6px}
+  .table-badge{
+    display:inline-flex;align-items:center;gap:7px;margin-top:12px;
+    background:rgba(245,185,66,.1);border:1px solid rgba(245,185,66,.35);
+    color:var(--gold2);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:700;
+  }
+
+  /* ---------- Навигация по категориям ---------- */
+  nav{
+    position:sticky;top:0;z-index:40;
+    margin:10px -16px 0;padding:10px 16px;
+    background:linear-gradient(180deg,rgba(11,9,6,.97) 70%,rgba(11,9,6,0) 100%);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .navscroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .navscroll::-webkit-scrollbar{display:none}
+  .navscroll a{
+    flex:0 0 auto;text-decoration:none;white-space:nowrap;
+    font-size:13px;font-weight:700;color:var(--gold2);
+    background:var(--card);border:1px solid var(--line);
+    padding:8px 13px;border-radius:999px;
+  }
+  .navscroll a:active{background:var(--card2)}
+
+  /* ---------- Секции ---------- */
+  section{margin-top:26px;scroll-margin-top:62px}
+  h2{
+    display:flex;align-items:center;gap:10px;
+    margin:0 0 12px;font-size:17px;font-weight:800;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--gold);
+  }
+  h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+  /* ---------- Карточка позиции ---------- */
+  .item{
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 12px 12px 14px;margin-bottom:9px;
+    transition:border-color .15s, background .15s;
+  }
+  .item.active{border-color:rgba(245,185,66,.65);background:var(--card2)}
+  .info{flex:1;min-width:0}
+  .name{font-size:15.5px;font-weight:700;line-height:1.25}
+  .desc{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .price{
+    font-size:15px;font-weight:800;color:var(--gold2);
+    white-space:nowrap;margin-left:auto;padding-left:6px;
+  }
+
+  /* ---------- Кнопки +/- ---------- */
+  .ctrl{flex:0 0 auto;display:flex;align-items:center}
+  .add{
+    width:38px;height:38px;border-radius:50%;border:none;
+    background:linear-gradient(145deg,var(--gold2),var(--gold-deep));
+    color:#2a1a04;font-size:24px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 3px 12px rgba(245,185,66,.28);
+  }
+  .add:active{transform:scale(.92)}
+  .stepper{
+    display:flex;align-items:center;gap:2px;
+    background:rgba(245,185,66,.12);border:1px solid rgba(245,185,66,.45);
+    border-radius:999px;padding:3px;
+  }
+  .stepper button{
+    width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;
+    background:transparent;color:var(--gold2);font-size:21px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stepper button:active{background:rgba(245,185,66,.2)}
+  .qty{min-width:26px;text-align:center;font-size:16px;font-weight:800;color:#fff}
+  .hidden{display:none !important}
+
+  /* ---------- Сеты ---------- */
+  .set{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#231a0e 0%,#1a1510 55%,#2a1d0c 100%);
+    border:1px solid rgba(245,185,66,.4);
+  }
+  .set::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,var(--fire),var(--gold2));
+  }
+  .set .name{color:var(--gold2);font-size:16.5px;letter-spacing:.4px;text-transform:uppercase}
+  .set .price{font-size:17px}
+  .gift{color:var(--fire);font-weight:700}
+
+  .note{
+    background:rgba(255,106,0,.1);border:1px solid rgba(255,106,0,.3);
+    border-radius:12px;padding:11px 13px;font-size:13px;color:#ffc98f;margin-bottom:14px;
+  }
+
+  /* ---------- Нижняя панель ---------- */
+  .bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    display:flex;align-items:center;gap:12px;
+    max-width:560px;margin:0 auto;
+    padding:12px 16px calc(12px + var(--safe-b));
+    background:linear-gradient(180deg,rgba(11,9,6,0) 0%,rgba(11,9,6,.92) 28%,#0b0906 65%);
+    transform:translateY(130%);transition:transform .28s cubic-bezier(.3,.8,.4,1);
+    pointer-events:none;
+  }
+  .bar.show{transform:translateY(0);pointer-events:auto}
+  .cartbtn{
+    position:relative;flex:0 0 auto;
+    width:56px;height:56px;border-radius:50%;border:1px solid var(--line);
+    background:var(--card2);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.6);
+  }
+  .cartbtn svg{width:26px;height:26px;stroke:var(--gold2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .badge{
+    position:absolute;top:-4px;right:-4px;min-width:23px;height:23px;padding:0 6px;
+    border-radius:999px;background:var(--fire);color:#fff;
+    font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+    border:2px solid #0b0906;
+  }
+  .orderbtn{
+    flex:1;height:56px;border:none;border-radius:16px;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold2) 0%,var(--gold) 45%,var(--gold-deep) 100%);
+    color:#241603;font-weight:800;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 6px 22px rgba(245,185,66,.3);
+    padding:0 16px;
+  }
+  .orderbtn:active{transform:scale(.98)}
+  .orderbtn .t{font-size:17px}
+  .orderbtn .s{font-size:17px;font-weight:900}
+  .orderbtn .sep{width:1px;height:22px;background:rgba(36,22,3,.3)}
+
+  /* ---------- Корзина (шторка) ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.65);
+    opacity:0;pointer-events:none;transition:opacity .25s;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:70;
+    max-width:560px;margin:0 auto;
+    background:var(--bg2);border:1px solid var(--line);border-bottom:none;
+    border-radius:22px 22px 0 0;
+    padding:8px 16px calc(20px + var(--safe-b));
+    max-height:82vh;display:flex;flex-direction:column;
+    transform:translateY(100%);transition:transform .3s cubic-bezier(.3,.8,.4,1);
+  }
+  .sheet.show{transform:translateY(0)}
+  .grip{width:42px;height:4px;border-radius:99px;background:#4a3a22;margin:6px auto 14px}
+  .sheet h3{margin:0 0 4px;font-size:19px;color:var(--gold2);font-weight:800}
+  .sheet .meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .cartlist{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+  .crow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(58,44,23,.55)}
+  .crow .cn{flex:1;min-width:0;font-size:14.5px;font-weight:600}
+  .crow .cn small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+  .crow .cs{font-size:14.5px;font-weight:800;color:var(--gold2);white-space:nowrap}
+  .total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:14px 0 16px;font-size:16px;font-weight:700;
+  }
+  .total b{font-size:23px;color:var(--gold2)}
+  .sheet .orderbtn{width:100%}
+  .clear{
+    background:none;border:none;color:var(--muted);font-size:13px;
+    text-decoration:underline;cursor:pointer;padding:10px;display:block;margin:4px auto 0;
+  }
+
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:28px 0 10px;line-height:1.7}
+  footer a{color:var(--gold);text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flame">🔥</div>
+  <h1>Шашлык<br>Рыба Пивко</h1>
+  <div class="sub">Меню</div>
+  <div class="table-badge" id="tableBadge">Столик №<span id="tableNum">—</span></div>
+</header>
+
+<nav>
+  <div class="navscroll" id="navscroll"></div>
+</nav>
+
+<main id="menu"></main>
+
+<footer>
+  Заказ / Тапсырыс — доставка и самовывоз<br>
+  <a href="tel:+77712355592">8 771 235 55 92</a>
+</footer>
+
+<!-- Нижняя панель -->
+<div class="bar" id="bar">
+  <button class="cartbtn" id="cartBtn" aria-label="Корзина">
+    <svg viewBox="0 0 24 24"><path d="M3 4h2l2.5 11.5a2 2 0 0 0 2 1.5h7.3a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>
+    <span class="badge" id="badge">0</span>
+  </button>
+  <button class="orderbtn" id="orderBtn">
+    <span class="s" id="barSum">0 ₸</span>
+    <span class="sep"></span>
+    <span class="t">Заказать</span>
+  </button>
+</div>
+
+<!-- Корзина -->
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet">
+  <div class="grip"></div>
+  <h3>Ваш заказ</h3>
+  <div class="meta" id="sheetMeta">Столик №—</div>
+  <div class="cartlist" id="cartlist"></div>
+  <div class="total"><span>Итого</span><b id="sheetSum">0 ₸</b></div>
+  <button class="orderbtn" id="orderBtn2">
+    <span class="t">Отправить заказ в WhatsApp</span>
+  </button>
+  <button class="clear" id="clearBtn">Очистить корзину</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var PHONE = "77712355592";
+
+var MENU = [
+  { id:"sets", title:"Сеты", note:"🔥 Акция: баранина — 1000 ₸ (обновлено)", sets:true, items:[
+    { n:"Сет 1",  d:"10 Баранина + 5 Окорочка <span class='gift'>в подарок</span>",                    p:10000 },
+    { n:"Сет 2",  d:"5 Баранина + 2 Окорочка <span class='gift'>в подарок</span>",                     p:5000  },
+    { n:"Сет 3",  d:"20 Баранина + 5 Окорочка + 5 Крылышки + 5 Филе <span class='gift'>в подарок</span>", p:20000 },
+    { n:"Сет 4",  d:"10 Утка + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000  },
+    { n:"Сет 5",  d:"10 Крылышки + 3 Окорочка <span class='gift'>в подарок</span>",                    p:6000  },
+    { n:"Сет 6",  d:"10 Люля + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000  },
+    { n:"Сет 7",  d:"10 Филе + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000  }
+  ]},
+  { id:"shashlyk", title:"Шашлыки", items:[
+    { n:"Баранина", p:1000 }, { n:"Шампиньоны", p:800 }, { n:"Крылышки", p:600 },
+    { n:"Филе", p:600 }, { n:"Наполеон", p:1000 }, { n:"Утка", p:600 },
+    { n:"Люля", p:600 }, { n:"Люля в оболочке", p:600 }, { n:"Окорочка", p:350 },
+    { n:"Рулет", p:700 }, { n:"Ребрышки", p:700 }, { n:"Стейк", p:4000 }
+  ]},
+  { id:"pervoe", title:"Первое", items:[
+    { n:"Сорпа", p:1500 }, { n:"Лапша", p:1400 }, { n:"Пельмени", p:1600 },
+    { n:"Лагман", p:1600 }, { n:"Гуйру", p:1600 }, { n:"Цомян", p:1600 }
+  ]},
+  { id:"vtoroe", title:"Второе", items:[
+    { n:"Мясо по-тайски", p:1500 }, { n:"Фри с мясом", p:1900 },
+    { n:"Курица с грибами", p:1900 }, { n:"Куырдак", p:3500 }, { n:"Тебян", p:3500 }
+  ]},
+  { id:"salaty", title:"Салаты", items:[
+    { n:"Оливье", p:2290 }, { n:"Крабовый", p:2290 },
+    { n:"Свежий", p:1290 }, { n:"Ачи-чук", p:1290 }
+  ]},
+  { id:"limonady", title:"Лимонады", items:[
+    { n:"Манго-маракуйя", p:1200 }, { n:"Киви-лайм", p:1200 }, { n:"Клубника", p:1200 },
+    { n:"Мохито", p:1200 }, { n:"Арбуз", p:1200 }, { n:"Малина", p:1200 }
+  ]},
+  { id:"napitki", title:"Напитки", items:[
+    { n:"Кока-кола", p:800 }, { n:"Фанта", p:800 }, { n:"Спрайт", p:800 },
+    { n:"Фьюсти", p:800 }, { n:"Макси чай", p:800 }, { n:"Пепси", p:800 },
+    { n:"Алекс", p:500 }, { n:"Негаз. вода", p:500 }
+  ]},
+  { id:"pivo", title:"Пиво", items:[
+    { n:"Миллер", p:1200 }, { n:"Эфес", p:1200 }, { n:"Бавария", p:1200 },
+    { n:"Хайнекен", p:1200 }, { n:"Холстен", p:1200 },
+    { n:"Прага", p:700 }, { n:"Чимкентское", p:700 }
+  ]},
+  { id:"vodka", title:"Водка", items:[
+    { n:"Хортица", p:4500 }, { n:"Кызылжар", p:5500 }, { n:"Хаома", p:4000 },
+    { n:"Nemiroff", p:8000 }, { n:"ABSOLUT", p:10000 }
+  ]},
+  { id:"viski", title:"Виски", items:[
+    { n:"Ballantines", p:15000 }, { n:"Jameson", p:15000 }, { n:"Clan MacGregor", p:10000 },
+    { n:"William Lawson", p:10000 }, { n:"Red Rebel", p:12000 },
+    { n:"Martini", p:8000 }, { n:"Tequila", p:20000 }
+  ]},
+  { id:"vino", title:"Вино", items:[
+    { n:"Алазанская Долина", p:6000 }, { n:"Алазанская светлое", p:6000 }
+  ]}
+];
+
+/* ---------- Номер столика из URL ---------- */
+function getTable(){
+  var p = new URLSearchParams(location.search);
+  var keys = ["table","stol","t","стол","столик"];
+  for (var i=0;i<keys.length;i++){
+    var v = p.get(keys[i]);
+    if (v !== null && String(v).trim() !== "") return String(v).trim();
+  }
+  // поддержка вида /menu/12 и #12
+  var h = location.hash.replace("#","").trim();
+  if (/^\d+$/.test(h)) return h;
+  var seg = location.pathname.split("/").filter(Boolean).pop() || "";
+  if (/^\d+$/.test(seg)) return seg;
+  return "";
+}
+var TABLE = getTable();
+document.getElementById("tableNum").textContent = TABLE || "—";
+if (!TABLE) document.getElementById("tableBadge").style.display = "none";
+
+/* ---------- Деньги ---------- */
+function money(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " ₸"; }
+function plain(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " T"; }
+
+/* ---------- Состояние ---------- */
+var cart = {};      // key -> qty
+var INDEX = {};     // key -> {n,p,cat}
+
+/* ---------- Отрисовка меню ---------- */
+var menuEl = document.getElementById("menu");
+var navEl  = document.getElementById("navscroll");
+var html = "", nav = "";
+
+MENU.forEach(function(cat){
+  nav += '<a href="#'+cat.id+'">'+cat.title+'</a>';
+  html += '<section id="'+cat.id+'"><h2>'+cat.title+'</h2>';
+  if (cat.note) html += '<div class="note">'+cat.note+'</div>';
+  cat.items.forEach(function(it, i){
+    var key = cat.id+"-"+i;
+    INDEX[key] = { n:it.n, p:it.p, cat:cat.title };
+    html +=
+      '<div class="item'+(cat.sets?" set":"")+'" id="it-'+key+'">'+
+        '<div class="info">'+
+          '<div class="name">'+it.n+'</div>'+
+          (it.d ? '<div class="desc">'+it.d+'</div>' : '')+
+        '</div>'+
+        '<div class="price">'+money(it.p)+'</div>'+
+        '<div class="ctrl">'+
+          '<button class="add" data-add="'+key+'" aria-label="Добавить">+</button>'+
+          '<div class="stepper hidden" id="st-'+key+'">'+
+            '<button data-dec="'+key+'" aria-label="Меньше">−</button>'+
+            '<span class="qty" id="q-'+key+'">0</span>'+
+            '<button data-inc="'+key+'" aria-label="Больше">+</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+  });
+  html += '</section>';
+});
+menuEl.innerHTML = html;
+navEl.innerHTML = nav;
+
+/* ---------- Логика корзины ---------- */
+var bar      = document.getElementById("bar");
+var badge    = document.getElementById("badge");
+var barSum   = document.getElementById("barSum");
+var sheet    = document.getElementById("sheet");
+var overlay  = document.getElementById("overlay");
+var cartlist = document.getElementById("cartlist");
+var sheetSum = document.getElementById("sheetSum");
+
+function totals(){
+  var count=0, sum=0;
+  for (var k in cart){ count += cart[k]; sum += cart[k]*INDEX[k].p; }
+  return { count:count, sum:sum };
+}
+
+function renderItem(key){
+  var q = cart[key] || 0;
+  var row = document.getElementById("it-"+key);
+  var st  = document.getElementById("st-"+key);
+  var add = row.querySelector(".add");
+  document.getElementById("q-"+key).textContent = q;
+  if (q > 0){ st.classList.remove("hidden"); add.classList.add("hidden");  row.classList.add("active"); }
+  else      { st.classList.add("hidden");    add.classList.remove("hidden"); row.classList.remove("active"); }
+}
+
+function renderBar(){
+  var t = totals();
+  badge.textContent = t.count;
+  barSum.textContent = money(t.sum);
+  if (t.count > 0) bar.classList.add("show");
+  else { bar.classList.remove("show"); closeSheet(); }
+}
+
+function renderSheet(){
+  var out = "", t = totals();
+  for (var k in cart){
+    var it = INDEX[k];
+    out += '<div class="crow">'+
+             '<div class="cn">'+it.n+'<small>'+cart[k]+' × '+money(it.p)+'</small></div>'+
+             '<div class="cs">'+money(cart[k]*it.p)+'</div>'+
+           '</div>';
+  }
+  cartlist.innerHTML = out || '<div class="meta">Корзина пуста</div>';
+  sheetSum.textContent = money(t.sum);
+  document.getElementById("sheetMeta").textContent = TABLE ? ("Столик №"+TABLE) : "Номер столика не указан";
+}
+
+function change(key, delta){
+  var q = (cart[key] || 0) + delta;
+  if (q <= 0) delete cart[key]; else cart[key] = q;
+  renderItem(key);
+  renderBar();
+  if (sheet.classList.contains("show")) renderSheet();
+}
+
+document.addEventListener("click", function(e){
+  var b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.add) change(b.dataset.add, 1);
+  else if (b.dataset.inc) change(b.dataset.inc, 1);
+  else if (b.dataset.dec) change(b.dataset.dec, -1);
+});
+
+/* ---------- Шторка ---------- */
+function openSheet(){ renderSheet(); sheet.classList.add("show"); overlay.classList.add("show"); }
+function closeSheet(){ sheet.classList.remove("show"); overlay.classList.remove("show"); }
+document.getElementById("cartBtn").onclick = function(){
+  sheet.classList.contains("show") ? closeSheet() : openSheet();
+};
+overlay.onclick = closeSheet;
+document.getElementById("clearBtn").onclick = function(){
+  var keys = Object.keys(cart);
+  cart = {};
+  keys.forEach(renderItem);
+  renderBar();
+  renderSheet();
+};
+
+/* ---------- Отправка в WhatsApp ---------- */
+function sendOrder(){
+  var t = totals();
+  if (t.count === 0) return;
+
+  var lines = [];
+  lines.push("🍢 *НОВЫЙ ЗАКАЗ*");
+  lines.push(TABLE ? ("🪑 Столик: *№" + TABLE + "*") : "🪑 Столик: не указан");
+  lines.push("");
+  var i = 1;
+  for (var k in cart){
+    var it = INDEX[k];
+    lines.push(i + ". " + it.n + " — " + cart[k] + " × " + plain(it.p) + " = " + plain(cart[k]*it.p));
+    i++;
+  }
+  lines.push("");
+  lines.push("Позиций: " + t.count);
+  lines.push("💰 *ИТОГО: " + plain(t.sum) + "*");
+
+  var url = "https://wa.me/" + PHONE + "?text=" + encodeURIComponent(lines.join("\n"));
+  window.open(url, "_blank");
+}
+document.getElementById("orderBtn").onclick  = sendOrder;
+document.getElementById("orderBtn2").onclick = sendOrder;
+
+renderBar();
+})();
+</script>
+</body>
+</html>

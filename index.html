@@ -53,14 +53,8 @@
   }
 
   /* ---------- Навигация по категориям ---------- */
-  nav{
-    position:sticky;top:0;z-index:40;
-    margin:10px -16px 0;padding:10px 16px;
-    background:linear-gradient(180deg,rgba(11,9,6,.97) 70%,rgba(11,9,6,0) 100%);
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  }
-  .navscroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-  .navscroll::-webkit-scrollbar{display:none}
+  nav{margin:16px 0 0}
+  .navscroll{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
   .navscroll a{
     flex:0 0 auto;text-decoration:none;white-space:nowrap;
     font-size:13px;font-weight:700;color:var(--gold2);
@@ -70,7 +64,7 @@
   .navscroll a:active{background:var(--card2)}
 
   /* ---------- Секции ---------- */
-  section{margin-top:26px;scroll-margin-top:62px}
+  section{margin-top:26px;scroll-margin-top:14px}
   h2{
     display:flex;align-items:center;gap:10px;
     margin:0 0 12px;font-size:17px;font-weight:800;letter-spacing:1.6px;
@@ -199,6 +193,8 @@
   .crow .cn{flex:1;min-width:0;font-size:14.5px;font-weight:600}
   .crow .cn small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
   .crow .cs{font-size:14.5px;font-weight:800;color:var(--gold2);white-space:nowrap}
+  .crow.calc .cn{color:var(--muted);font-weight:600}
+  .crow.calc .cs{color:var(--text);font-weight:700}
   .total{
     display:flex;justify-content:space-between;align-items:baseline;
     padding:14px 0 16px;font-size:16px;font-weight:700;
@@ -393,10 +389,14 @@ var overlay  = document.getElementById("overlay");
 var cartlist = document.getElementById("cartlist");
 var sheetSum = document.getElementById("sheetSum");
 
+var SERVICE = 0.10;            // обслуживание, 10% от суммы заказа
+var SERVICE_LABEL = "Обслуживание 10%";
+
 function totals(){
   var count=0, sum=0;
   for (var k in cart){ count += cart[k]; sum += cart[k]*INDEX[k].p; }
-  return { count:count, sum:sum };
+  var service = Math.round(sum * SERVICE);
+  return { count:count, sum:sum, service:service, grand:sum + service };
 }
 
 function renderItem(key){
@@ -412,7 +412,7 @@ function renderItem(key){
 function renderBar(){
   var t = totals();
   badge.textContent = t.count;
-  barSum.textContent = money(t.sum);
+  barSum.textContent = money(t.grand);
   if (t.count > 0) bar.classList.add("show");
   else { bar.classList.remove("show"); closeSheet(); }
 }
@@ -426,8 +426,14 @@ function renderSheet(){
              '<div class="cs">'+money(cart[k]*it.p)+'</div>'+
            '</div>';
   }
+  if (t.count > 0){
+    out += '<div class="crow calc"><div class="cn">Сумма заказа</div>'+
+           '<div class="cs">'+money(t.sum)+'</div></div>'+
+           '<div class="crow calc"><div class="cn">'+SERVICE_LABEL+'</div>'+
+           '<div class="cs">'+money(t.service)+'</div></div>';
+  }
   cartlist.innerHTML = out || '<div class="meta">Корзина пуста</div>';
-  sheetSum.textContent = money(t.sum);
+  sheetSum.textContent = money(t.grand);
   document.getElementById("sheetMeta").textContent = TABLE ? ("Столик №"+TABLE) : "Номер столика не указан";
 }
 
@@ -468,7 +474,10 @@ function sendOrder(){
   if (t.count === 0) return;
 
   var lines = [];
+  lines.push("Сәлеметсіз бе!");
+  lines.push("");
   lines.push("🍢 *НОВЫЙ ЗАКАЗ*");
+  lines.push("");
   lines.push(TABLE ? ("🪑 Столик: *№" + TABLE + "*") : "🪑 Столик: не указан");
   lines.push("");
   var i = 1;
@@ -479,7 +488,11 @@ function sendOrder(){
   }
   lines.push("");
   lines.push("Позиций: " + t.count);
-  lines.push("💰 *ИТОГО: " + plain(t.sum) + "*");
+  lines.push("Сумма заказа: " + plain(t.sum));
+  lines.push(SERVICE_LABEL + ": " + plain(t.service));
+  lines.push("💰 *ИТОГО: " + plain(t.grand) + "*");
+  lines.push("");
+  lines.push("Рақмет!");
 
   var url = "https://wa.me/" + PHONE + "?text=" + encodeURIComponent(lines.join("\n"));
   window.open(url, "_blank");

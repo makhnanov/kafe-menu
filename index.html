@@ -193,6 +193,19 @@
   .grip{width:42px;height:4px;border-radius:99px;background:#4a3a22;margin:6px auto 14px}
   .sheet h3{margin:0 0 4px;font-size:19px;color:var(--gold2);font-weight:800}
   .sheet .meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .mode{
+    display:flex;gap:4px;padding:4px;margin-bottom:6px;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;
+  }
+  .mode button{
+    flex:1;padding:9px 6px;border:none;border-radius:9px;cursor:pointer;
+    background:transparent;color:var(--muted);
+    font-size:13.5px;font-weight:700;font-family:inherit;
+  }
+  .mode button.on{
+    background:linear-gradient(145deg,var(--gold2),var(--gold-deep));
+    color:#2a1a04;
+  }
   .cartlist{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
   .crow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(58,44,23,.55)}
   .crow .cn{flex:1;min-width:0;font-size:14.5px;font-weight:600}
@@ -242,7 +255,7 @@
     <span class="badge" id="badge">0</span>
   </button>
   <button class="orderbtn" id="orderBtn">
-    <span class="s" id="barSum">0 ₸</span>
+    <span class="s" id="barSum">0 тг</span>
     <span class="sep"></span>
     <span class="t">Заказать</span>
   </button>
@@ -254,8 +267,12 @@
   <div class="grip"></div>
   <h3>Ваш заказ</h3>
   <div class="meta" id="sheetMeta">Столик №—</div>
+  <div class="mode" id="mode">
+    <button class="on" data-mode="hall">В зале</button>
+    <button data-mode="away">С собой</button>
+  </div>
   <div class="cartlist" id="cartlist"></div>
-  <div class="total"><span>Итого</span><b id="sheetSum">0 ₸</b></div>
+  <div class="total"><span>Итого</span><b id="sheetSum">0 тг</b></div>
   <button class="orderbtn" id="orderBtn2">
     <span class="t">Отправить заказ в WhatsApp</span>
   </button>
@@ -278,7 +295,7 @@ var MENU = [
     { n:"Сет 6",  d:"10 Люля + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000  },
     { n:"Сет 7",  d:"10 Филе + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000  }
   ]},
-  { id:"shashlyk", title:"Шашлыки", note:"🔥 Акция: баранина — 1000 ₸ (обновлено)", items:[
+  { id:"shashlyk", title:"Шашлыки", note:"🔥 Акция: баранина — 1000 тг (обновлено)", items:[
     { n:"Баранина", p:1000 }, { n:"Шампиньоны", p:800 }, { n:"Крылышки", p:600 },
     { n:"Филе", p:600 }, { n:"Наполеон", p:1000 }, { n:"Утка", p:600 },
     { n:"Люля", p:600 }, { n:"Люля в оболочке", p:600 }, { n:"Окорочка", p:350 },
@@ -344,8 +361,9 @@ document.getElementById("tableNum").textContent = TABLE || "—";
 if (!TABLE) document.getElementById("tableBadge").style.display = "none";
 
 /* ---------- Деньги ---------- */
-function money(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " ₸"; }
-function plain(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " T"; }
+var CUR = "тг";
+function money(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " " + CUR; }
+var plain = money;
 
 /* ---------- Состояние ---------- */
 var cart = {};      // key -> qty
@@ -405,11 +423,12 @@ var sheetSum = document.getElementById("sheetSum");
 
 var SERVICE = 0.10;            // обслуживание, 10% от суммы заказа
 var SERVICE_LABEL = "Обслуживание 10%";
+var takeaway = false;          // «с собой» — обслуживание не начисляется
 
 function totals(){
   var count=0, sum=0;
   for (var k in cart){ count += cart[k]; sum += cart[k]*INDEX[k].p; }
-  var service = Math.round(sum * SERVICE);
+  var service = takeaway ? 0 : Math.round(sum * SERVICE);
   return { count:count, sum:sum, service:service, grand:sum + service };
 }
 
@@ -442,13 +461,18 @@ function renderSheet(){
   }
   if (t.count > 0){
     out += '<div class="crow calc"><div class="cn">Сумма заказа</div>'+
-           '<div class="cs">'+money(t.sum)+'</div></div>'+
-           '<div class="crow calc"><div class="cn">'+SERVICE_LABEL+'</div>'+
-           '<div class="cs">'+money(t.service)+'</div></div>';
+           '<div class="cs">'+money(t.sum)+'</div></div>';
+    out += takeaway
+      ? '<div class="crow calc"><div class="cn">Обслуживание</div>'+
+        '<div class="cs">не начисляется</div></div>'
+      : '<div class="crow calc"><div class="cn">'+SERVICE_LABEL+'</div>'+
+        '<div class="cs">'+money(t.service)+'</div></div>';
   }
   cartlist.innerHTML = out || '<div class="meta">Корзина пуста</div>';
   sheetSum.textContent = money(t.grand);
-  document.getElementById("sheetMeta").textContent = TABLE ? ("Столик №"+TABLE) : "Номер столика не указан";
+  document.getElementById("sheetMeta").textContent =
+    takeaway ? "Заказ с собой"
+             : (TABLE ? ("Столик №"+TABLE) : "Номер столика не указан");
 }
 
 function change(key, delta){
@@ -474,6 +498,17 @@ document.getElementById("cartBtn").onclick = function(){
   sheet.classList.contains("show") ? closeSheet() : openSheet();
 };
 overlay.onclick = closeSheet;
+
+document.getElementById("mode").addEventListener("click", function(e){
+  var b = e.target.closest("button");
+  if (!b) return;
+  takeaway = (b.dataset.mode === "away");
+  Array.prototype.forEach.call(this.children, function(x){
+    x.classList.toggle("on", x === b);
+  });
+  renderBar();
+  renderSheet();
+});
 document.getElementById("clearBtn").onclick = function(){
   var keys = Object.keys(cart);
   cart = {};
@@ -492,19 +527,24 @@ function sendOrder(){
   lines.push("");
   lines.push("🍢 *НОВЫЙ ЗАКАЗ*");
   lines.push("");
-  lines.push(TABLE ? ("🪑 Столик: *№" + TABLE + "*") : "🪑 Столик: не указан");
+  lines.push(takeaway
+    ? "🥡 *С СОБОЙ*"
+    : (TABLE ? ("🪑 Столик: *№" + TABLE + "*") : "🪑 Столик: не указан"));
   lines.push("");
   var i = 1;
   for (var k in cart){
     var it = INDEX[k];
-    lines.push(i + ". " + it.n + " — " + cart[k] + " × " + plain(it.p) + " = " + plain(cart[k]*it.p));
+    lines.push(i + ". " + it.n);
+    lines.push(cart[k] + " × " + plain(it.p) + " = " + plain(cart[k]*it.p));
     i++;
   }
   lines.push("");
   lines.push("Позиций: " + t.count);
   lines.push("Сумма заказа: " + plain(t.sum));
-  lines.push("");
-  lines.push(SERVICE_LABEL + ": " + plain(t.service));
+  if (!takeaway){
+    lines.push("");
+    lines.push(SERVICE_LABEL + ": " + plain(t.service));
+  }
   lines.push("");
   lines.push("💰 *ИТОГО: " + plain(t.grand) + "*");
   lines.push("");

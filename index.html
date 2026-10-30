@@ -53,7 +53,12 @@
   }
 
   /* ---------- Навигация по категориям ---------- */
-  nav{margin:16px 0 0}
+  nav{
+    position:sticky;top:0;z-index:40;
+    margin:16px -16px 0;padding:10px 16px 14px;
+    background:linear-gradient(180deg,rgba(11,9,6,.97) 72%,rgba(11,9,6,0) 100%);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
   .navscroll{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
   .navscroll a{
     flex:0 0 auto;text-decoration:none;white-space:nowrap;
@@ -64,7 +69,7 @@
   .navscroll a:active{background:var(--card2)}
 
   /* ---------- Секции ---------- */
-  section{margin-top:26px;scroll-margin-top:14px}
+  section{margin-top:26px;scroll-margin-top:calc(var(--navh, 96px) + 8px)}
   h2{
     display:flex;align-items:center;gap:10px;
     margin:0 0 12px;font-size:17px;font-weight:800;letter-spacing:1.6px;
@@ -380,6 +385,15 @@ MENU.forEach(function(cat){
 menuEl.innerHTML = html;
 navEl.innerHTML = nav;
 
+/* высота липкой шапки -> отступ при переходе к разделу */
+var navBox = document.querySelector("nav");
+function syncNavHeight(){
+  document.documentElement.style.setProperty("--navh", navBox.offsetHeight + "px");
+}
+syncNavHeight();
+window.addEventListener("resize", syncNavHeight);
+window.addEventListener("orientationchange", syncNavHeight);
+
 /* ---------- Логика корзины ---------- */
 var bar      = document.getElementById("bar");
 var badge    = document.getElementById("badge");
@@ -489,7 +503,9 @@ function sendOrder(){
   lines.push("");
   lines.push("Позиций: " + t.count);
   lines.push("Сумма заказа: " + plain(t.sum));
+  lines.push("");
   lines.push(SERVICE_LABEL + ": " + plain(t.service));
+  lines.push("");
   lines.push("💰 *ИТОГО: " + plain(t.grand) + "*");
   lines.push("");
   lines.push("Рақмет!");

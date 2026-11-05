@@ -270,7 +270,7 @@
     <span class="badge" id="badge">0</span>
   </button>
   <button class="orderbtn" id="orderBtn">
-    <span class="s" id="barSum">0 тг</span>
+    <span class="s" id="barSum">0 ₸</span>
     <span class="sep"></span>
     <span class="t">Заказать</span>
   </button>
@@ -287,7 +287,7 @@
     <button data-mode="away">С собой</button>
   </div>
   <div class="cartlist" id="cartlist"></div>
-  <div class="total"><span>Итого</span><b id="sheetSum">0 тг</b></div>
+  <div class="total"><span>Итого</span><b id="sheetSum">0 ₸</b></div>
   <button class="orderbtn" id="orderBtn2">
     <span class="t">Отправить заказ в WhatsApp</span>
   </button>
@@ -310,7 +310,7 @@ var MENU = [
     { n:"Сет 6",  d:"10 Люля + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000,  img:"img/set6.jpg" },
     { n:"Сет 7",  d:"10 Филе + 3 Окорочка <span class='gift'>в подарок</span>",                        p:6000,  img:"img/set7.jpg" }
   ]},
-  { id:"shashlyk", title:"Шашлыки", note:"🔥 Акция: баранина — 1000 тг", items:[
+  { id:"shashlyk", title:"Шашлыки", note:"🔥 Акция: баранина — 1000 ₸", items:[
     { n:"Баранина", p:1000 }, { n:"Шампиньоны", p:800 }, { n:"Крылышки", p:600 },
     { n:"Филе", p:600 }, { n:"Наполеон", p:1000 }, { n:"Утка", p:600 },
     { n:"Люля", p:600 }, { n:"Люля в оболочке", p:600 }, { n:"Окорочка", p:350 },
@@ -384,9 +384,11 @@ document.getElementById("tableNum").textContent = TABLE || "—";
 if (!TABLE) document.getElementById("tableBadge").style.display = "none";
 
 /* ---------- Деньги ---------- */
-var CUR = "тг";
-function money(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," ") + " " + CUR; }
-var plain = money;
+var CUR     = "₸";   // на странице — шрифт свой, глиф рисуется
+var CUR_MSG = "тг";  // в сообщении WhatsApp — системный шрифт телефона может не знать ₸
+function nums(v){ return v.toString().replace(/\B(?=(\d{3})+(?!\d))/g," "); }
+function money(v){ return nums(v) + " " + CUR; }      // страница
+function plain(v){ return nums(v) + " " + CUR_MSG; }  // сообщение
 
 /* ---------- Состояние ---------- */
 var cart = {};      // key -> qty
@@ -550,8 +552,6 @@ function sendOrder(){
 
   var lines = [];
   lines.push("Сәлеметсіз бе!");
-  lines.push("");
-  lines.push("🍢 *НОВЫЙ ЗАКАЗ*");
   lines.push("");
   lines.push(takeaway
     ? "🥡 *С СОБОЙ*"

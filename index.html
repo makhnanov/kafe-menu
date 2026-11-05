@@ -561,9 +561,9 @@ function sendOrder(){
   for (var k in cart){
     var it = INDEX[k];
     var num = i + ") ";
-    var pad = new Array(num.length + 1).join(" ");   // отступ под номером позиции
+    var pad = new Array(num.length + 3).join(" ");   // отступ под номером позиции + 2 пробела
     lines.push(num + it.n + " (" + cart[k] + " шт)");
-    lines.push(pad + cart[k] + " × " + plain(it.p) + " = " + plain(cart[k]*it.p));
+    lines.push(pad + plain(it.p) + " × " + cart[k] + " = " + plain(cart[k]*it.p));
     i++;
   }
   lines.push("");

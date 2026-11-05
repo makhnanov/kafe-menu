@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Генератор PDF с QR-карточками на столики для печати и ламинации.
+"""Генератор PDF с QR-карточками-вкладышами на столики под рамку Front.dxf.
 
 Делает всё сам: QR-коды (qrencode) -> HTML -> PDF (headless Chrome).
 
-    ./make-cards.py                      # столики 1-7, по 2 карточки
+    ./make-cards.py                       # столики 1-7, русский + казахский
+    ./make-cards.py --langs ru            # только русские
     ./make-cards.py --tables 12           # столики 1-12
-    ./make-cards.py --tables 7 --copies 3 # по 3 карточки на столик
-    ./make-cards.py --title "Меню"        # другое слово на карточке
+    ./make-cards.py --clearance 0         # вкладыш ровно в размер рамки
+
+Русская карточка ведёт на ?table=N, казахская — на ?table=N&lang=kk.
+
+Размеры из Front.dxf. Лист целиком 60.4 x 125.639 мм = лицевая панель
+(106.955) + нижняя планка (18.684). Видно только окно 53 x 97 мм в верхней
+части: весь текст и QR лежат внутри него с запасом 1.5 мм. Остальное —
+губы окна по 3.7 мм и скрытый низ 24.939 мм — печатается пустым: бумага
+там нужна, чтобы лист держался и опирался на планку, но смотреть там нечего.
 
 Нужны qrencode и google-chrome (или chromium).
 """
@@ -15,12 +23,26 @@ import argparse, pathlib, re, shutil, subprocess, sys, tempfile
 BASE_URL = "https://makhnanov.github.io/kafe-menu/"
 HERE = pathlib.Path(__file__).resolve().parent
 
-# Размеры под A4 (21 x 29.7 см): ячейка 6 x 9 см -> сетка 3 x 3
-CELL_W, CELL_H = 6, 9
-COLS, ROWS = 3, 3
-PER_PAGE = COLS * ROWS
-MARGIN_X = (21 - COLS * CELL_W) / 2      # 1.5 см
-MARGIN_Y = (29.7 - ROWS * CELL_H) / 2    # 1.35 см
+# --- геометрия рамки Front.dxf, мм ---
+FRONT_W, FRONT_H = 60.4, 106.9546        # лицевая панель с окном
+BOT_H = 18.6843                          # нижняя планка: прячет низ листа и подпирает его
+WIN_W, WIN_H = 53.0, 97.0                # окно — единственное, что видно
+WIN_L, WIN_T = 3.7, 3.7                  # губы окна слева/справа/сверху
+SAFE = 1.5                               # запас внутрь окна, чтобы губа не срезала рисунок
+
+# весь лист = панель + планка; низ уходит внутрь и ничего не показывает
+SHEET_W, SHEET_H = FRONT_W, FRONT_H + BOT_H          # 60.4 x 125.639
+HIDDEN_B = FRONT_H - WIN_T - WIN_H + BOT_H           # 24.939 — скрытый низ листа
+
+# --- раскладка на A4 (210 x 297 мм) ---
+COLS, ROWS = 3, 2
+GAP = 5.0                                # зазор между карточками
+MARK_OFF, MARK_LEN = 1.2, 2.6            # метки реза в зазоре
+
+TEXTS = {
+    "ru": {"brand": "Menu", "table": "Столик", "hint": "Наведите камеру телефона"},
+    "kk": {"brand": "Мәзір", "table": "Үстел", "hint": "Телефон камерасын бағыттаңыз"},
+}
 
 
 def tool(*names):
@@ -48,76 +70,116 @@ def qr_svg(url, workdir, name):
     return raw.strip()
 
 
-def card_html(n, qr, title):
+def card_html(n, lang, qr, titles):
+    t = dict(TEXTS[lang])
+    if titles.get(lang):
+        t["brand"] = titles[lang]
+    marks = "".join(f'<i class="m {c}"></i>' for c in
+                    ("tl h", "tl v", "tr h", "tr v", "bl h", "bl v", "br h", "br v"))
     return f"""
-    <div class="cell">
+    <div class="cell">{marks}
       <div class="card">
-        <div class="frame">
-          <div class="brand">{title}</div>
+        <div class="win">
+          <div class="brand">{t['brand']}</div>
           <div class="rule"><span>&#10022;</span></div>
           <div class="qr">{qr}</div>
-          <div class="table">Столик <b>№{n}</b></div>
-          <div class="hint">Наведите камеру телефона</div>
+          <div class="table">{t['table']} <b>&#8470;{n}</b></div>
+          <div class="hint">{t['hint']}</div>
         </div>
+        <div class="tag">{n} &middot; {lang.upper()}</div>
       </div>
     </div>"""
 
 
-def build_html(tables, copies, title, base_url, workdir):
-    qrs = {n: qr_svg(f"{base_url}?table={n}", workdir, f"t{n}") for n in tables}
-    cards = [n for n in tables for _ in range(copies)]
-    pages = [cards[i:i + PER_PAGE] for i in range(0, len(cards), PER_PAGE)]
+def menu_url(base_url, n, lang):
+    """Русская карточка — обычный адрес, казахская — с ?lang=kk."""
+    url = f"{base_url}?table={n}"
+    return url if lang == "ru" else f"{url}&lang={lang}"
+
+
+def build_html(tables, langs, titles, base_url, clearance, workdir):
+    qrs = {(n, l): qr_svg(menu_url(base_url, n, l), workdir, f"t{n}-{l}")
+           for n in tables for l in langs}
+
+    # на листе: верхний ряд — первый язык, нижний — второй, те же столики
+    cards = []
+    for chunk in [tables[i:i + COLS] for i in range(0, len(tables), COLS)]:
+        for lang in langs:
+            cards += [(n, lang) for n in chunk]
+            cards += [None] * (COLS - len(chunk))
+    pages = [cards[i:i + COLS * ROWS] for i in range(0, len(cards), COLS * ROWS)]
 
     body = ""
-    for idx, page in enumerate(pages):
-        filler = PER_PAGE - len(page) if idx == len(pages) - 1 else 0
-        body += '<div class="sheet">' + "".join(card_html(n, qrs[n], title) for n in page)
-        body += '<div class="cell empty"></div>' * filler
+    for page in pages:
+        body += '<div class="sheet">' + "".join(
+            '<div class="cell empty"></div>' if c is None
+            else card_html(c[0], c[1], qrs[c], titles) for c in page)
         body += "</div>\n"
+
+    c = clearance / 2
+    card_w, card_h = SHEET_W - clearance, SHEET_H - clearance
+    win_l, win_t = WIN_L - c + SAFE, WIN_T - c + SAFE
+    win_w, win_h = WIN_W - 2 * SAFE, WIN_H - 2 * SAFE
+    sheet_w = COLS * card_w + (COLS - 1) * GAP
+    sheet_h = ROWS * card_h + (ROWS - 1) * GAP
+    mar_x, mar_y = (210 - sheet_w) / 2, (297 - sheet_h) / 2
 
     html = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>QR-карточки на столики</title>
+<title>QR-вкладыши на столики</title>
 <style>
-  @page {{ size: A4; margin: {MARGIN_Y}cm {MARGIN_X}cm; }}
+  @page {{ size: A4; margin: {mar_y:.3f}mm {mar_x:.3f}mm; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   html, body {{ background: #fff; }}
 
   .sheet {{
-    width: {COLS * CELL_W}cm; height: {ROWS * CELL_H}cm;
+    width: {sheet_w:.3f}mm; height: {sheet_h:.3f}mm;
     display: grid;
-    grid-template-columns: repeat({COLS}, {CELL_W}cm);
-    grid-template-rows: repeat({ROWS}, {CELL_H}cm);
+    grid-template-columns: repeat({COLS}, {card_w:.3f}mm);
+    grid-template-rows: repeat({ROWS}, {card_h:.3f}mm);
+    gap: {GAP}mm;
     page-break-after: always;
   }}
   .sheet:last-child {{ page-break-after: auto; }}
 
-  /* линия реза */
-  .cell {{
-    width: {CELL_W}cm; height: {CELL_H}cm;
-    outline: 0.2mm dashed #c9c2b4;
-    outline-offset: -0.1mm;
-    padding: 3mm;
-  }}
-  .cell.empty {{ outline-color: #e8e4dc; }}
+  .cell {{ position: relative; width: {card_w:.3f}mm; height: {card_h:.3f}mm; }}
 
+  /* метки реза — в зазоре, на самой карточке ничего лишнего */
+  .m {{ position: absolute; background: #9a907d; }}
+  .m.h {{ width: {MARK_LEN}mm; height: 0.15mm; }}
+  .m.v {{ width: 0.15mm; height: {MARK_LEN}mm; }}
+  .m.tl.h, .m.bl.h {{ right: 100%; margin-right: {MARK_OFF}mm; }}
+  .m.tr.h, .m.br.h {{ left: 100%; margin-left: {MARK_OFF}mm; }}
+  .m.tl.v, .m.tr.v {{ bottom: 100%; margin-bottom: {MARK_OFF}mm; }}
+  .m.bl.v, .m.br.v {{ top: 100%; margin-top: {MARK_OFF}mm; }}
+  .m.tl.h, .m.tr.h {{ top: 0; }}
+  .m.bl.h, .m.br.h {{ bottom: 0; }}
+  .m.tl.v, .m.bl.v {{ left: 0; }}
+  .m.tr.v, .m.br.v {{ right: 0; }}
+
+  /* линия реза по контуру вкладыша — прячется под лип рамки */
   .card {{
+    position: relative;
     width: 100%; height: 100%;
     background: #fdfaf3;
+    outline: 0.15mm dashed #cfc8ba;
+    outline-offset: -0.075mm;
+  }}
+  .cell.empty {{ }}
+
+  /* рисунок живёт внутри окна рамки */
+  .win {{
+    position: absolute;
+    left: {win_l:.3f}mm; top: {win_t:.3f}mm;
+    width: {win_w:.3f}mm; height: {win_h:.3f}mm;
     border: 0.45mm solid #b08a3a;
     border-radius: 2mm;
-    padding: 1mm;
-  }}
-  .frame {{
-    width: 100%; height: 100%;
-    border: 0.18mm solid #d8c79a;
-    border-radius: 1.4mm;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 1.6mm;
-    padding: 2.5mm 2mm;
+    gap: 2mm;
+    padding: 3mm 2mm;
   }}
 
   .brand {{
@@ -130,7 +192,7 @@ def build_html(tables, copies, title, base_url, workdir):
     width: 72%; height: 1px;
     background: linear-gradient(90deg, transparent, #c7ab6a, transparent);
     position: relative;
-    margin: 0.4mm 0 1.2mm;
+    margin: 0.6mm 0 2mm;
   }}
   .rule span {{
     position: absolute; top: -6.5pt; left: 50%; transform: translateX(-50%);
@@ -138,41 +200,63 @@ def build_html(tables, copies, title, base_url, workdir):
     font-size: 8pt; color: #b08a3a;
   }}
 
-  .qr {{ width: 38mm; height: 38mm; }}
+  .qr {{ width: 42mm; height: 42mm; }}
   .qr svg {{ width: 100%; height: 100%; display: block; }}
 
   .table {{
     font-family: "Helvetica Neue", Arial, sans-serif;
-    font-size: 12pt; color: #3d3528; margin-top: 1.4mm;
+    font-size: 12.5pt; color: #3d3528; margin-top: 2mm;
   }}
-  .table b {{ color: #6b4a12; font-size: 13.5pt; }}
+  .table b {{ color: #6b4a12; font-size: 14pt; }}
   .hint {{
     font-family: "Helvetica Neue", Arial, sans-serif;
     font-size: 6.6pt; color: #9a907d; letter-spacing: 0.2pt;
+    text-align: center; line-height: 1.3;
+  }}
+
+  /* метка столика и языка на нижней кромке — уходит под рамку */
+  .tag {{
+    position: absolute; bottom: 1.2mm; left: 0; right: 0;
+    text-align: center;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 4.5pt; color: #b9b1a1; letter-spacing: 0.4pt;
   }}
 </style>
 </head>
 <body>
 {body}</body>
 </html>"""
-    return html, len(cards), len(pages)
+    n_cards = sum(1 for c in cards if c)
+    return html, n_cards, len(pages), (card_w, card_h)
 
 
 def main():
-    ap = argparse.ArgumentParser(description="PDF с QR-карточками на столики")
+    ap = argparse.ArgumentParser(description="PDF с QR-вкладышами на столики под рамку Front.dxf")
     ap.add_argument("--tables", type=int, default=7, help="сколько столиков (по умолчанию 7)")
-    ap.add_argument("--copies", type=int, default=2, help="карточек на столик (по умолчанию 2)")
-    ap.add_argument("--title", default="Menu", help="слово на карточке (по умолчанию Menu)")
+    ap.add_argument("--langs", default="ru,kk", help="языки карточек: ru, kk (по умолчанию ru,kk)")
+    ap.add_argument("--title-ru", default="", help="слово на русской карточке (по умолчанию Menu)")
+    ap.add_argument("--title-kk", default="", help="слово на казахской карточке (по умолчанию Мәзір)")
+    ap.add_argument("--clearance", type=float, default=0.4,
+                    help="насколько вкладыш меньше рамки, мм всего (по умолчанию 0.4)")
     ap.add_argument("--url", default=BASE_URL, help="адрес меню")
     ap.add_argument("-o", "--out", default=str(HERE / "qr-cards.pdf"), help="куда сохранить PDF")
     a = ap.parse_args()
 
-    tables = range(1, a.tables + 1)
+    langs = [s.strip() for s in a.langs.split(",") if s.strip()]
+    bad = [l for l in langs if l not in TEXTS]
+    if bad:
+        sys.exit(f"нет текстов для языка: {', '.join(bad)} (есть: {', '.join(TEXTS)})")
+    if len(langs) > ROWS:
+        sys.exit(f"на лист влезает языков: {ROWS}")
+
+    tables = list(range(1, a.tables + 1))
+    titles = {"ru": a.title_ru, "kk": a.title_kk}
     out = pathlib.Path(a.out).resolve()
 
     with tempfile.TemporaryDirectory() as tmp:
         workdir = pathlib.Path(tmp)
-        html, n_cards, n_pages = build_html(tables, a.copies, a.title, a.url, workdir)
+        html, n_cards, n_pages, (cw, ch) = build_html(
+            tables, langs, titles, a.url, a.clearance, workdir)
         page = workdir / "cards.html"
         page.write_text(html, encoding="utf-8")
 
@@ -183,8 +267,12 @@ def main():
             check=True, capture_output=True,
         )
 
-    print(f"карточек: {n_cards}, листов A4: {n_pages} -> {out}")
-    print("печатать в масштабе 100% («фактический размер»), иначе 6×9 см поедет")
+    print(f"карточек: {n_cards} ({' + '.join(f'{len(tables)} {l}' for l in langs)}), "
+          f"листов A4: {n_pages} -> {out}")
+    print(f"лист: {cw:.2f} x {ch:.2f} мм, из них видно окно {WIN_W:g} x {WIN_H:g} мм сверху, "
+          f"скрытый низ {HIDDEN_B - a.clearance / 2:.2f} мм")
+    print(f"зазор между карточками {GAP:g} мм")
+    print("печатать в масштабе 100% («фактический размер»), иначе размер поедет")
 
 
 if __name__ == "__main__":

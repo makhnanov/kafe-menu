@@ -39,8 +39,24 @@
     padding-left:16px;padding-right:16px;
   }
 
+  /* ---------- Переключатель языка ---------- */
+  .langbar{display:flex;justify-content:center;padding-top:12px}
+  .lang{
+    display:inline-flex;gap:3px;padding:3px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px;
+  }
+  .lang button{
+    border:none;cursor:pointer;background:transparent;color:var(--muted);
+    font-family:inherit;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
+    padding:7px 15px;border-radius:999px;line-height:1;
+  }
+  .lang button.on{
+    background:linear-gradient(145deg,var(--gold2),var(--gold-deep));
+    color:#2a1a04;
+  }
+
   /* ---------- Шапка ---------- */
-  header{text-align:center;padding-top:26px;padding-bottom:14px}
+  header{text-align:center;padding-top:10px;padding-bottom:14px}
   .flame{font-size:28px;line-height:1}
   h1{
     margin:6px 0 2px;font-size:30px;line-height:1.05;letter-spacing:.5px;
@@ -247,10 +263,16 @@
 <body>
 
 <header>
+  <div class="langbar">
+    <div class="lang" id="lang">
+      <button type="button" data-lang="ru" class="on">РУС</button>
+      <button type="button" data-lang="kk">ҚАЗ</button>
+    </div>
+  </div>
   <div class="flame">🔥</div>
   <h1>Шашлык<br>Рыба Пивко</h1>
-  <div class="sub">Меню</div>
-  <div class="table-badge" id="tableBadge">Столик №<span id="tableNum">—</span></div>
+  <div class="sub" id="subTitle">Меню</div>
+  <div class="table-badge" id="tableBadge"><span id="tableWord">Столик №</span><span id="tableNum">—</span></div>
 </header>
 
 <nav>
@@ -260,7 +282,7 @@
 <main id="menu"></main>
 
 <footer>
-  Заказ / Тапсырыс — доставка и самовывоз<br>
+  <span id="footText">Заказ / Тапсырыс — доставка и самовывоз</span><br>
   <a href="tel:+77712355592">8 771 235 55 92</a>
 </footer>
 
@@ -273,7 +295,7 @@
   <button class="orderbtn" id="orderBtn">
     <span class="s" id="barSum">0 ₸</span>
     <span class="sep"></span>
-    <span class="t">Заказать</span>
+    <span class="t" id="barOrderText">Заказать</span>
   </button>
 </div>
 
@@ -281,16 +303,16 @@
 <div class="overlay" id="overlay"></div>
 <div class="sheet" id="sheet">
   <div class="grip"></div>
-  <h3>Ваш заказ</h3>
+  <h3 id="sheetTitle">Ваш заказ</h3>
   <div class="meta" id="sheetMeta">Столик №—</div>
   <div class="mode" id="mode">
-    <button class="on" data-mode="hall">В зале</button>
-    <button data-mode="away">С собой</button>
+    <button type="button" class="on" data-mode="hall">В зале</button>
+    <button type="button" data-mode="away">С собой</button>
   </div>
   <div class="cartlist" id="cartlist"></div>
-  <div class="total"><span>Итого</span><b id="sheetSum">0 ₸</b></div>
+  <div class="total"><span id="totalWord">Итого</span><b id="sheetSum">0 ₸</b></div>
   <button class="orderbtn" id="orderBtn2">
-    <span class="t">Отправить заказ в WhatsApp</span>
+    <span class="t" id="sendText">Отправить заказ в WhatsApp</span>
   </button>
   <button class="clear" id="clearBtn">Очистить корзину</button>
 </div>
@@ -368,6 +390,89 @@ var MENU = [
   ]}
 ];
 
+/* ---------- Казахские названия: русская строка -> казахская ----------
+   чего нет в словаре, остаётся как есть (бренды, «Оливье», «Лагман» и т.п.) */
+var KK = {
+  /* разделы */
+  "Сеты":"Сеттер", "Шашлыки":"Шашлықтар", "Первое":"Бірінші тағам",
+  "Второе":"Екінші тағам", "Салаты":"Салаттар", "Хлеб":"Нан",
+  "Лимонады":"Лимонадтар", "Напитки":"Сусындар", "Чай":"Шай",
+  "Пиво":"Сыра", "Водка":"Арақ", "Вино":"Шарап",
+
+  /* плашка акции */
+  "🔥 Акция: баранина — 1000 ₸":"🔥 Акция: қой еті — 1000 ₸",
+
+  /* описания сетов */
+  "10 Баранина + 5 Окорочка <span class='gift'>в подарок</span>":
+    "10 Қой еті + 5 Тауық саны <span class='gift'>сыйлыққа</span>",
+  "5 Баранина + 2 Окорочка <span class='gift'>в подарок</span>":
+    "5 Қой еті + 2 Тауық саны <span class='gift'>сыйлыққа</span>",
+  "20 Баранина + 5 Окорочка + 5 Крылышки + 5 Филе <span class='gift'>в подарок</span>":
+    "20 Қой еті + 5 Тауық саны + 5 Қанат + 5 Филе <span class='gift'>сыйлыққа</span>",
+  "10 Утка + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Үйрек + 3 Тауық саны <span class='gift'>сыйлыққа</span>",
+  "10 Крылышки + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Қанат + 3 Тауық саны <span class='gift'>сыйлыққа</span>",
+  "10 Люля + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Люля + 3 Тауық саны <span class='gift'>сыйлыққа</span>",
+  "10 Филе + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Филе + 3 Тауық саны <span class='gift'>сыйлыққа</span>",
+
+  /* шашлыки */
+  "Баранина":"Қой еті", "Шампиньоны":"Шампиньон", "Крылышки":"Тауық қанаты",
+  "Утка":"Үйрек", "Люля в оболочке":"Қабықтағы люля", "Окорочка":"Тауық саны",
+  "Ребрышки":"Қабырға",
+
+  /* первое */
+  "Шорпа из сайгака":"Киік сорпасы", "Шорпа из баранины":"Қой сорпасы",
+  "Лапша":"Кеспе", "Пельмени":"Пельмень", "Лагман":"Лағман",
+
+  /* второе */
+  "Мясо по-тайски":"Тай тәсіліндегі ет", "Фри с мясом":"Етпен фри",
+  "Курица с грибами":"Саңырауқұлақпен тауық", "Куырдак":"Қуырдақ",
+  "Каурдак из сайгака":"Киік қуырдағы",
+  "Окорочка в кисло-сладком соусе с картофелем":"Қышқыл-тәтті соустағы тауық саны картоппен",
+
+  /* салаты и хлеб */
+  "Крабовый":"Крабты салат", "Свежий":"Балғын салат", "Хлеб — корзина":"Нан — себет",
+
+  /* лимонады */
+  "Клубника":"Құлпынай", "Арбуз":"Қарбыз", "Малина":"Таңқурай",
+
+  /* напитки и чай */
+  "Макси чай":"Макси шай", "Негаз. вода":"Газсыз су",
+  "Молочный улун":"Сүтті улун", "Ташкентский":"Ташкент шайы",
+  "Чай малиновый":"Таңқурай шай", "Чай клубничный":"Құлпынай шай"
+};
+
+/* ---------- Тексты интерфейса ---------- */
+var UI = {
+  ru:{
+    title:"Шашлык Рыба Пивко — Меню", sub:"Меню", table:"Столик", cart:"Корзина",
+    order:"Заказать", yourOrder:"Ваш заказ", hall:"В зале", away:"С собой",
+    total:"Итого", send:"Отправить заказ в WhatsApp", clear:"Очистить корзину",
+    empty:"Корзина пуста", sum:"Сумма заказа",
+    service:"Обслуживание 10%", serviceShort:"Обслуживание", noService:"не начисляется",
+    awayOrder:"Заказ с собой", noTable:"Номер столика не указан",
+    foot:"Заказ / Тапсырыс — доставка и самовывоз",
+    add:"Добавить", less:"Меньше", more:"Больше",
+    msgAway:"🥡 *С СОБОЙ*", msgTable:"🪑 Столик: *№", msgNoTable:"🪑 Столик: не указан",
+    pcs:"шт", msgCount:"Позиций: ", msgSum:"Сумма заказа:", msgTotal:"💰 *ИТОГО:*"
+  },
+  kk:{
+    title:"Шашлык Рыба Пивко — Мәзір", sub:"Мәзір", table:"Үстел", cart:"Себет",
+    order:"Тапсырыс беру", yourOrder:"Сіздің тапсырысыңыз", hall:"Залда", away:"Алып кету",
+    total:"Барлығы", send:"Тапсырысты WhatsApp-қа жіберу", clear:"Себетті тазалау",
+    empty:"Себет бос", sum:"Тапсырыс сомасы",
+    service:"Қызмет көрсету 10%", serviceShort:"Қызмет көрсету", noService:"есептелмейді",
+    awayOrder:"Алып кетуге тапсырыс", noTable:"Үстел нөмірі көрсетілмеген",
+    foot:"Тапсырыс — жеткізу және өзіңіз алып кету",
+    add:"Қосу", less:"Азайту", more:"Көбейту",
+    msgAway:"🥡 *АЛЫП КЕТУ*", msgTable:"🪑 Үстел: *№", msgNoTable:"🪑 Үстел: көрсетілмеген",
+    pcs:"дана", msgCount:"Жалпы саны: ", msgSum:"Тапсырыс сомасы:", msgTotal:"💰 *БАРЛЫҒЫ:*"
+  }
+};
+
 /* ---------- Номер столика из URL ---------- */
 function getTable(){
   var p = new URLSearchParams(location.search);
@@ -387,6 +492,18 @@ var TABLE = getTable();
 document.getElementById("tableNum").textContent = TABLE || "—";
 if (!TABLE) document.getElementById("tableBadge").style.display = "none";
 
+/* ---------- Язык из URL ----------
+   kk — код казахского языка по ISO 639-1; kz и kaz принимаем как частую описку
+   (kz — это код страны, а не языка). По умолчанию русский. */
+function getLang(){
+  var p = new URLSearchParams(location.search);
+  var v = (p.get("lang") || p.get("язык") || "").trim().toLowerCase();
+  return (v==="kk" || v==="kz" || v==="kaz" || v==="қаз" || v==="каз") ? "kk" : "ru";
+}
+var LANG = getLang();
+var T = UI[LANG];
+function kk(s){ return (LANG==="kk" && KK[s]) ? KK[s] : s; }
+
 /* ---------- Деньги ---------- */
 var CUR     = "₸";   // на странице — шрифт свой, глиф рисуется
 var CUR_MSG = "тг";  // в сообщении WhatsApp — системный шрифт телефона может не знать ₸
@@ -401,39 +518,43 @@ var INDEX = {};     // key -> {n,p,cat}
 /* ---------- Отрисовка меню ---------- */
 var menuEl = document.getElementById("menu");
 var navEl  = document.getElementById("navscroll");
-var html = "", nav = "";
 
-MENU.forEach(function(cat){
-  nav += '<a href="#'+cat.id+'">'+cat.title+'</a>';
-  html += '<section id="'+cat.id+'"><h2>'+cat.title+'</h2>';
-  if (cat.note) html += '<div class="note">'+cat.note+'</div>';
-  cat.items.forEach(function(it, i){
-    var key = cat.id+"-"+i;
-    INDEX[key] = { n:it.n, p:it.p, cat:cat.title };
-    var priceHtml = '<div class="price">'+money(it.p)+'</div>';
-    html +=
-      '<div class="item'+(cat.sets?" set":"")+'" id="it-'+key+'">'+
-        (it.img ? '<div class="pic"><img src="'+it.img+'" width="84" height="64" alt="'+it.n+'" loading="lazy"></div>' : '')+
-        '<div class="info">'+
-          '<div class="name">'+it.n+'</div>'+
-          (it.d ? '<div class="desc">'+it.d+'</div>' : '')+
-          (it.img ? priceHtml : '')+
-        '</div>'+
-        (it.img ? '' : priceHtml)+
-        '<div class="ctrl">'+
-          '<button class="add" data-add="'+key+'" aria-label="Добавить">+</button>'+
-          '<div class="stepper hidden" id="st-'+key+'">'+
-            '<button data-dec="'+key+'" aria-label="Меньше">−</button>'+
-            '<span class="qty" id="q-'+key+'">0</span>'+
-            '<button data-inc="'+key+'" aria-label="Больше">+</button>'+
+function renderMenu(){
+  var html = "", nav = "";
+  MENU.forEach(function(cat){
+    var title = kk(cat.title);
+    nav += '<a href="#'+cat.id+'">'+title+'</a>';
+    html += '<section id="'+cat.id+'"><h2>'+title+'</h2>';
+    if (cat.note) html += '<div class="note">'+kk(cat.note)+'</div>';
+    cat.items.forEach(function(it, i){
+      var key  = cat.id+"-"+i;
+      var name = kk(it.n);
+      INDEX[key] = { n:name, p:it.p, cat:title };
+      var priceHtml = '<div class="price">'+money(it.p)+'</div>';
+      html +=
+        '<div class="item'+(cat.sets?" set":"")+'" id="it-'+key+'">'+
+          (it.img ? '<div class="pic"><img src="'+it.img+'" width="84" height="64" alt="'+name+'" loading="lazy"></div>' : '')+
+          '<div class="info">'+
+            '<div class="name">'+name+'</div>'+
+            (it.d ? '<div class="desc">'+kk(it.d)+'</div>' : '')+
+            (it.img ? priceHtml : '')+
           '</div>'+
-        '</div>'+
-      '</div>';
+          (it.img ? '' : priceHtml)+
+          '<div class="ctrl">'+
+            '<button class="add" data-add="'+key+'" aria-label="'+T.add+'">+</button>'+
+            '<div class="stepper hidden" id="st-'+key+'">'+
+              '<button data-dec="'+key+'" aria-label="'+T.less+'">−</button>'+
+              '<span class="qty" id="q-'+key+'">0</span>'+
+              '<button data-inc="'+key+'" aria-label="'+T.more+'">+</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+    });
+    html += '</section>';
   });
-  html += '</section>';
-});
-menuEl.innerHTML = html;
-navEl.innerHTML = nav;
+  menuEl.innerHTML = html;
+  navEl.innerHTML = nav;
+}
 
 /* высота липкой шапки -> отступ при переходе к разделу */
 var navBox = document.querySelector("nav");
@@ -454,7 +575,6 @@ var cartlist = document.getElementById("cartlist");
 var sheetSum = document.getElementById("sheetSum");
 
 var SERVICE = 0.10;            // обслуживание, 10% от суммы заказа
-var SERVICE_LABEL = "Обслуживание 10%";
 var takeaway = false;          // «с собой» — обслуживание не начисляется
 
 function totals(){
@@ -492,19 +612,19 @@ function renderSheet(){
            '</div>';
   }
   if (t.count > 0){
-    out += '<div class="crow calc"><div class="cn">Сумма заказа</div>'+
+    out += '<div class="crow calc"><div class="cn">'+T.sum+'</div>'+
            '<div class="cs">'+money(t.sum)+'</div></div>';
     out += takeaway
-      ? '<div class="crow calc"><div class="cn">Обслуживание</div>'+
-        '<div class="cs">не начисляется</div></div>'
-      : '<div class="crow calc"><div class="cn">'+SERVICE_LABEL+'</div>'+
+      ? '<div class="crow calc"><div class="cn">'+T.serviceShort+'</div>'+
+        '<div class="cs">'+T.noService+'</div></div>'
+      : '<div class="crow calc"><div class="cn">'+T.service+'</div>'+
         '<div class="cs">'+money(t.service)+'</div></div>';
   }
-  cartlist.innerHTML = out || '<div class="meta">Корзина пуста</div>';
+  cartlist.innerHTML = out || '<div class="meta">'+T.empty+'</div>';
   sheetSum.textContent = money(t.grand);
   document.getElementById("sheetMeta").textContent =
-    takeaway ? "Заказ с собой"
-             : (TABLE ? ("Столик №"+TABLE) : "Номер столика не указан");
+    takeaway ? T.awayOrder
+             : (TABLE ? (T.table+" №"+TABLE) : T.noTable);
 }
 
 function change(key, delta){
@@ -558,31 +678,31 @@ function sendOrder(){
   lines.push("Сәлеметсіз бе!");
   lines.push("");
   lines.push(takeaway
-    ? "🥡 *С СОБОЙ*"
-    : (TABLE ? ("🪑 Столик: *№" + TABLE + "*") : "🪑 Столик: не указан"));
+    ? T.msgAway
+    : (TABLE ? (T.msgTable + TABLE + "*") : T.msgNoTable));
   lines.push("");
   var i = 1;
   for (var k in cart){
     var it = INDEX[k];
     var num = i + ") ";
     var pad = new Array(num.length + 3).join(" ");   // отступ под номером позиции + 2 пробела
-    lines.push(num + it.n + " (" + cart[k] + " шт)");
+    lines.push(num + it.n + " (" + cart[k] + " " + T.pcs + ")");
     lines.push(cart[k] > 1
       ? pad + plain(it.p) + " × " + cart[k] + " = " + plain(cart[k]*it.p)
       : pad + plain(it.p));                          // одна штука — цену дважды не пишем
     i++;
   }
   lines.push("");
-  lines.push("Позиций: " + t.count);
-  lines.push("Сумма заказа:");
+  lines.push(T.msgCount + t.count);
+  lines.push(T.msgSum);
   lines.push("  " + plain(t.sum));
   if (!takeaway){
     lines.push("");
-    lines.push(SERVICE_LABEL + ":");
+    lines.push(T.service + ":");
     lines.push("  " + plain(t.service));
   }
   lines.push("");
-  lines.push("💰 *ИТОГО:*");
+  lines.push(T.msgTotal);
   lines.push("  *" + plain(t.grand) + "*");
   lines.push("");
   lines.push("Рақмет!");
@@ -593,7 +713,52 @@ function sendOrder(){
 document.getElementById("orderBtn").onclick  = sendOrder;
 document.getElementById("orderBtn2").onclick = sendOrder;
 
-renderBar();
+/* ---------- Переключение языка ---------- */
+function applyLang(l){
+  LANG = (l === "kk") ? "kk" : "ru";
+  T = UI[LANG];
+
+  document.documentElement.lang = LANG;
+  document.title = T.title;
+  document.getElementById("subTitle").textContent     = T.sub;
+  document.getElementById("tableWord").textContent    = T.table + " №";
+  document.getElementById("footText").textContent     = T.foot;
+  document.getElementById("barOrderText").textContent = T.order;
+  document.getElementById("sheetTitle").textContent   = T.yourOrder;
+  document.getElementById("sendText").textContent     = T.send;
+  document.getElementById("totalWord").textContent    = T.total;
+  document.getElementById("clearBtn").textContent     = T.clear;
+  document.getElementById("cartBtn").setAttribute("aria-label", T.cart);
+  Array.prototype.forEach.call(document.getElementById("mode").children, function(b){
+    b.textContent = (b.dataset.mode === "away") ? T.away : T.hall;
+  });
+  Array.prototype.forEach.call(document.getElementById("lang").children, function(b){
+    b.classList.toggle("on", b.dataset.lang === LANG);
+  });
+
+  /* меню перерисовываем, корзина при этом цела: ключи от языка не зависят */
+  renderMenu();
+  syncNavHeight();
+  Object.keys(cart).forEach(renderItem);
+  renderBar();
+  renderSheet();
+
+  /* адрес держим в курсе: русский — без параметра, казахский — ?lang=kk */
+  try {
+    var q = new URLSearchParams(location.search);
+    q.delete("язык");
+    if (LANG === "kk") q.set("lang", "kk"); else q.delete("lang");
+    var qs = q.toString();
+    history.replaceState(null, "", location.pathname + (qs ? "?"+qs : "") + location.hash);
+  } catch (e) {}
+}
+
+document.getElementById("lang").addEventListener("click", function(e){
+  var b = e.target.closest("button");
+  if (b && b.dataset.lang !== LANG) applyLang(b.dataset.lang);
+});
+
+applyLang(LANG);
 })();
 </script>
 </body>

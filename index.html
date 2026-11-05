@@ -39,24 +39,8 @@
     padding-left:16px;padding-right:16px;
   }
 
-  /* ---------- Переключатель языка ---------- */
-  .langbar{display:flex;justify-content:center;padding-top:12px}
-  .lang{
-    display:inline-flex;gap:3px;padding:3px;
-    background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px;
-  }
-  .lang button{
-    border:none;cursor:pointer;background:transparent;color:var(--muted);
-    font-family:inherit;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
-    padding:7px 15px;border-radius:999px;line-height:1;
-  }
-  .lang button.on{
-    background:linear-gradient(145deg,var(--gold2),var(--gold-deep));
-    color:#2a1a04;
-  }
-
   /* ---------- Шапка ---------- */
-  header{text-align:center;padding-top:10px;padding-bottom:14px}
+  header{text-align:center;padding-top:22px;padding-bottom:14px}
   .flame{font-size:28px;line-height:1}
   h1{
     margin:6px 0 2px;font-size:30px;line-height:1.05;letter-spacing:.5px;
@@ -67,30 +51,50 @@
   }
   .sub{color:var(--muted);font-size:12.5px;letter-spacing:2px;text-transform:uppercase;margin-top:6px}
   .table-badge{
-    display:inline-flex;align-items:center;gap:7px;margin-top:12px;
+    display:inline-flex;align-items:center;margin-top:12px;
     background:rgba(245,185,66,.1);border:1px solid rgba(245,185,66,.35);
     color:var(--gold2);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:700;
   }
 
-  /* ---------- Навигация по категориям ---------- */
+  /* ---------- Полоса категорий + переключатель языка ----------
+     одна строка, без плашек и обводок: только текст и тонкие разделители.
+     Категории прокручиваются по горизонтали, язык закреплён у правого края. */
   nav{
     position:sticky;top:0;z-index:40;
-    margin:16px 0 0;
-    padding:10px 16px 12px;
+    margin:14px 0 0;
     background:var(--bg);
     border-bottom:1px solid var(--line);
   }
+  .navrow{display:flex;align-items:center;max-width:560px;margin:0 auto}
   .navscroll{
-    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
-    max-width:528px;margin:0 auto;
+    flex:1 1 auto;min-width:0;
+    display:flex;flex-wrap:nowrap;overflow-x:auto;
+    padding-left:14px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    /* подсказка, что строка продолжается за краем */
+    -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 18px),transparent 100%);
+            mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 18px),transparent 100%);
   }
+  .navscroll::-webkit-scrollbar{display:none}
   .navscroll a{
-    flex:0 0 auto;text-decoration:none;white-space:nowrap;
-    font-size:13px;font-weight:700;color:var(--gold2);
-    background:var(--card);border:1px solid var(--line);
-    padding:8px 13px;border-radius:999px;
+    position:relative;flex:0 0 auto;
+    text-decoration:none;white-space:nowrap;
+    font-size:13.5px;font-weight:700;color:var(--gold2);
+    padding:12px 13px;          /* палец попадает уверенно: ~41px по высоте */
   }
-  .navscroll a:active{background:var(--card2)}
+  .navscroll a:active{color:#fff}
+  .navscroll a+a::before{       /* разделитель между категориями */
+    content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+    width:1px;height:13px;background:var(--line);
+  }
+  .lang{flex:0 0 auto;display:flex;align-items:center;padding-right:12px}
+  .lang::before{content:"";width:1px;height:13px;background:var(--line);margin-right:3px}
+  .lang button{
+    border:none;cursor:pointer;background:transparent;color:var(--muted);
+    font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.4px;
+    padding:12px 5px;
+  }
+  .lang button.on{color:var(--gold2)}
 
   /* ---------- Секции ---------- */
   section{margin-top:26px;scroll-margin-top:calc(var(--navh, 96px) + 8px)}
@@ -263,12 +267,6 @@
 <body>
 
 <header>
-  <div class="langbar">
-    <div class="lang" id="lang">
-      <button type="button" data-lang="ru" class="on">РУС</button>
-      <button type="button" data-lang="kk">ҚАЗ</button>
-    </div>
-  </div>
   <div class="flame">🔥</div>
   <h1>Шашлык<br>Рыба Пивко</h1>
   <div class="sub" id="subTitle">Меню</div>
@@ -276,7 +274,14 @@
 </header>
 
 <nav>
-  <div class="navscroll" id="navscroll"></div>
+  <div class="navrow">
+    <div class="navscroll" id="navscroll"></div>
+    <div class="lang" id="lang">
+      <button type="button" data-lang="ru" class="on">РУС</button>
+      <button type="button" data-lang="kk">ҚАЗ</button>
+      <button type="button" data-lang="en">ENG</button>
+    </div>
+  </div>
 </nav>
 
 <main id="menu"></main>
@@ -358,6 +363,9 @@ var MENU = [
   { id:"hleb", title:"Хлеб", items:[
     { n:"Хлеб — корзина", p:300 }
   ]},
+  { id:"sousy", title:"Соусы", items:[
+    { n:"Соус белый", p:200 }, { n:"Соус красный", p:200 }
+  ]},
   { id:"limonady", title:"Лимонады", items:[
     { n:"Манго-маракуйя", p:1200 }, { n:"Киви-лайм", p:1200 }, { n:"Клубника", p:1200 },
     { n:"Мохито", p:1200 }, { n:"Арбуз", p:1200 }, { n:"Малина", p:1200 }
@@ -396,6 +404,7 @@ var KK = {
   /* разделы */
   "Сеты":"Сеттер", "Шашлыки":"Шашлықтар", "Первое":"Бірінші тағам",
   "Второе":"Екінші тағам", "Салаты":"Салаттар", "Хлеб":"Нан",
+  "Соусы":"Соустар",
   "Лимонады":"Лимонадтар", "Напитки":"Сусындар", "Чай":"Шай",
   "Пиво":"Сыра", "Водка":"Арақ", "Вино":"Шарап",
 
@@ -435,6 +444,7 @@ var KK = {
 
   /* салаты и хлеб */
   "Крабовый":"Крабты салат", "Свежий":"Балғын салат", "Хлеб — корзина":"Нан — себет",
+  "Соус белый":"Ақ соус", "Соус красный":"Қызыл соус",
 
   /* лимонады */
   "Клубника":"Құлпынай", "Арбуз":"Қарбыз", "Малина":"Таңқурай",
@@ -445,10 +455,79 @@ var KK = {
   "Чай малиновый":"Таңқурай шай", "Чай клубничный":"Құлпынай шай"
 };
 
+/* ---------- Английские названия: русская строка -> английская ---------- */
+var EN = {
+  /* разделы */
+  "Сеты":"Sets", "Шашлыки":"Skewers", "Первое":"Soups",
+  "Второе":"Main dishes", "Салаты":"Salads", "Хлеб":"Bread", "Соусы":"Sauces",
+  "Лимонады":"Lemonades", "Напитки":"Drinks", "Чай":"Tea",
+  "Пиво":"Beer", "Водка":"Vodka", "Виски":"Whisky", "Вино":"Wine",
+
+  /* плашка акции */
+  "🔥 Акция: баранина — 1000 ₸":"🔥 Special: lamb — 1000 ₸",
+
+  /* сеты */
+  "Сет 1":"Set 1", "Сет 2":"Set 2", "Сет 3":"Set 3", "Сет 4":"Set 4",
+  "Сет 5":"Set 5", "Сет 6":"Set 6", "Сет 7":"Set 7",
+  "10 Баранина + 5 Окорочка <span class='gift'>в подарок</span>":
+    "10 Lamb + 5 Chicken legs <span class='gift'>free</span>",
+  "5 Баранина + 2 Окорочка <span class='gift'>в подарок</span>":
+    "5 Lamb + 2 Chicken legs <span class='gift'>free</span>",
+  "20 Баранина + 5 Окорочка + 5 Крылышки + 5 Филе <span class='gift'>в подарок</span>":
+    "20 Lamb + 5 Chicken legs + 5 Wings + 5 Fillet <span class='gift'>free</span>",
+  "10 Утка + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Duck + 3 Chicken legs <span class='gift'>free</span>",
+  "10 Крылышки + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Wings + 3 Chicken legs <span class='gift'>free</span>",
+  "10 Люля + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Lyulya + 3 Chicken legs <span class='gift'>free</span>",
+  "10 Филе + 3 Окорочка <span class='gift'>в подарок</span>":
+    "10 Fillet + 3 Chicken legs <span class='gift'>free</span>",
+
+  /* шашлыки */
+  "Баранина":"Lamb", "Шампиньоны":"Mushrooms", "Крылышки":"Chicken wings",
+  "Филе":"Chicken fillet", "Наполеон":"Napoleon skewer", "Утка":"Duck",
+  "Люля":"Lyulya kebab", "Люля в оболочке":"Lyulya in casing", "Окорочка":"Chicken legs",
+  "Рулет":"Meat roll", "Ребрышки":"Ribs", "Стейк":"Steak",
+
+  /* первое */
+  "Шорпа из сайгака":"Saiga shorpa soup", "Шорпа из баранины":"Lamb shorpa soup",
+  "Лапша":"Noodle soup", "Пельмени":"Pelmeni dumplings", "Лагман":"Lagman",
+  "Гуйру":"Guyru lagman", "Цомян":"Tsomyan noodles",
+
+  /* второе */
+  "Мясо по-тайски":"Thai-style meat", "Фри с мясом":"Fries with meat",
+  "Курица с грибами":"Chicken with mushrooms", "Куырдак":"Kuyrdak",
+  "Каурдак из сайгака":"Saiga kaurdak",
+  "Окорочка в кисло-сладком соусе с картофелем":"Chicken legs in sweet & sour sauce with potatoes",
+  "Тебян":"Tebyan",
+
+  /* салаты, хлеб, соусы */
+  "Оливье":"Olivier salad", "Крабовый":"Crab salad", "Свежий":"Fresh vegetable salad",
+  "Ачи-чук":"Achichuk salad", "Хлеб — корзина":"Bread basket",
+  "Соус белый":"White sauce", "Соус красный":"Red sauce",
+
+  /* лимонады */
+  "Манго-маракуйя":"Mango & passion fruit", "Киви-лайм":"Kiwi & lime",
+  "Клубника":"Strawberry", "Мохито":"Mojito", "Арбуз":"Watermelon", "Малина":"Raspberry",
+
+  /* напитки и чай */
+  "Кока-кола":"Coca-Cola", "Фанта":"Fanta", "Спрайт":"Sprite", "Фьюсти":"Fuse Tea",
+  "Макси чай":"Maxi iced tea", "Пепси":"Pepsi", "Алекс":"Alex water", "Негаз. вода":"Still water",
+  "Молочный улун":"Milk oolong", "Ташкентский":"Tashkent tea",
+  "Чай малиновый":"Raspberry tea", "Чай клубничный":"Strawberry tea",
+
+  /* пиво, водка, вино */
+  "Миллер":"Miller", "Эфес":"Efes", "Бавария":"Bavaria", "Хайнекен":"Heineken",
+  "Холстен":"Holsten", "Прага":"Praga", "Чимкентское":"Chimkentskoye",
+  "Хортица":"Khortytsa", "Кызылжар":"Kyzylzhar", "Хаома":"Haoma",
+  "Алазанская Долина":"Alazani Valley, red", "Алазанская светлое":"Alazani Valley, white"
+};
+
 /* ---------- Тексты интерфейса ---------- */
 var UI = {
   ru:{
-    title:"Шашлык Рыба Пивко — Меню", sub:"Меню", table:"Столик", cart:"Корзина",
+    title:"Шашлык Рыба Пивко — Меню", sub:"Меню", table:"Столик", numSign:"№", cart:"Корзина",
     order:"Заказать", yourOrder:"Ваш заказ", hall:"В зале", away:"С собой",
     total:"Итого", send:"Отправить заказ в WhatsApp", clear:"Очистить корзину",
     empty:"Корзина пуста", sum:"Сумма заказа",
@@ -460,7 +539,7 @@ var UI = {
     pcs:"шт", msgCount:"Позиций: ", msgSum:"Сумма заказа:", msgTotal:"💰 *ИТОГО:*"
   },
   kk:{
-    title:"Шашлык Рыба Пивко — Мәзір", sub:"Мәзір", table:"Үстел", cart:"Себет",
+    title:"Шашлык Рыба Пивко — Мәзір", sub:"Мәзір", table:"Үстел", numSign:"№", cart:"Себет",
     order:"Тапсырыс беру", yourOrder:"Сіздің тапсырысыңыз", hall:"Залда", away:"Алып кету",
     total:"Барлығы", send:"Тапсырысты WhatsApp-қа жіберу", clear:"Себетті тазалау",
     empty:"Себет бос", sum:"Тапсырыс сомасы",
@@ -470,6 +549,20 @@ var UI = {
     add:"Қосу", less:"Азайту", more:"Көбейту",
     msgAway:"🥡 *АЛЫП КЕТУ*", msgTable:"🪑 Үстел: *№", msgNoTable:"🪑 Үстел: көрсетілмеген",
     pcs:"дана", msgCount:"Жалпы саны: ", msgSum:"Тапсырыс сомасы:", msgTotal:"💰 *БАРЛЫҒЫ:*"
+  },
+  en:{
+    title:"Shashlyk Ryba Pivko — Menu", sub:"Menu", table:"Table", numSign:"#", cart:"Cart",
+    order:"Order", yourOrder:"Your order", hall:"Dine in", away:"Takeaway",
+    total:"Total", send:"Send order to WhatsApp", clear:"Clear cart",
+    empty:"Cart is empty", sum:"Order subtotal",
+    service:"Service 10%", serviceShort:"Service", noService:"not charged",
+    awayOrder:"Takeaway order", noTable:"Table number not set",
+    foot:"Orders — delivery and takeaway",
+    add:"Add", less:"Less", more:"More",
+    /* сообщение в WhatsApp из англоязычного меню уходит по-русски:
+       его читают на кухне. Поля ниже — на случай, если решим иначе. */
+    msgAway:"🥡 *TAKEAWAY*", msgTable:"🪑 Table: *No.", msgNoTable:"🪑 Table: not set",
+    pcs:"pcs", msgCount:"Items: ", msgSum:"Order subtotal:", msgTotal:"💰 *TOTAL:*"
   }
 };
 
@@ -495,14 +588,21 @@ if (!TABLE) document.getElementById("tableBadge").style.display = "none";
 /* ---------- Язык из URL ----------
    kk — код казахского языка по ISO 639-1; kz и kaz принимаем как частую описку
    (kz — это код страны, а не языка). По умолчанию русский. */
+var DICT = { kk:KK, en:EN };     // ru — исходные строки, словарь не нужен
+function normLang(v){
+  v = String(v||"").trim().toLowerCase();
+  if (v==="kk" || v==="kz" || v==="kaz" || v==="қаз" || v==="каз") return "kk";
+  if (v==="en" || v==="eng" || v==="англ") return "en";
+  return "ru";
+}
 function getLang(){
   var p = new URLSearchParams(location.search);
-  var v = (p.get("lang") || p.get("язык") || "").trim().toLowerCase();
-  return (v==="kk" || v==="kz" || v==="kaz" || v==="қаз" || v==="каз") ? "kk" : "ru";
+  return normLang(p.get("lang") || p.get("язык"));
 }
 var LANG = getLang();
 var T = UI[LANG];
-function kk(s){ return (LANG==="kk" && KK[s]) ? KK[s] : s; }
+/* перевод названия: чего нет в словаре, остаётся по-русски (бренды и т.п.) */
+function tr(s){ var d = DICT[LANG]; return (d && d[s]) ? d[s] : s; }
 
 /* ---------- Деньги ---------- */
 var CUR     = "₸";   // на странице — шрифт свой, глиф рисуется
@@ -522,21 +622,22 @@ var navEl  = document.getElementById("navscroll");
 function renderMenu(){
   var html = "", nav = "";
   MENU.forEach(function(cat){
-    var title = kk(cat.title);
+    var title = tr(cat.title);
     nav += '<a href="#'+cat.id+'">'+title+'</a>';
     html += '<section id="'+cat.id+'"><h2>'+title+'</h2>';
-    if (cat.note) html += '<div class="note">'+kk(cat.note)+'</div>';
+    if (cat.note) html += '<div class="note">'+tr(cat.note)+'</div>';
     cat.items.forEach(function(it, i){
       var key  = cat.id+"-"+i;
-      var name = kk(it.n);
-      INDEX[key] = { n:name, p:it.p, cat:title };
+      var name = tr(it.n);
+      // ru — всегда русское название: его отправляем на кухню
+      INDEX[key] = { n:name, ru:it.n, p:it.p, cat:title };
       var priceHtml = '<div class="price">'+money(it.p)+'</div>';
       html +=
         '<div class="item'+(cat.sets?" set":"")+'" id="it-'+key+'">'+
           (it.img ? '<div class="pic"><img src="'+it.img+'" width="84" height="64" alt="'+name+'" loading="lazy"></div>' : '')+
           '<div class="info">'+
             '<div class="name">'+name+'</div>'+
-            (it.d ? '<div class="desc">'+kk(it.d)+'</div>' : '')+
+            (it.d ? '<div class="desc">'+tr(it.d)+'</div>' : '')+
             (it.img ? priceHtml : '')+
           '</div>'+
           (it.img ? '' : priceHtml)+
@@ -624,7 +725,7 @@ function renderSheet(){
   sheetSum.textContent = money(t.grand);
   document.getElementById("sheetMeta").textContent =
     takeaway ? T.awayOrder
-             : (TABLE ? (T.table+" №"+TABLE) : T.noTable);
+             : (TABLE ? (T.table+" "+T.numSign+TABLE) : T.noTable);
 }
 
 function change(key, delta){
@@ -674,35 +775,39 @@ function sendOrder(){
   var t = totals();
   if (t.count === 0) return;
 
+  /* английское меню — для гостя, а заказ читают на кухне: шлём по-русски */
+  var M  = (LANG === "en") ? UI.ru : T;
+  var ru = (LANG === "en");
+
   var lines = [];
   lines.push("Сәлеметсіз бе!");
   lines.push("");
   lines.push(takeaway
-    ? T.msgAway
-    : (TABLE ? (T.msgTable + TABLE + "*") : T.msgNoTable));
+    ? M.msgAway
+    : (TABLE ? (M.msgTable + TABLE + "*") : M.msgNoTable));
   lines.push("");
   var i = 1;
   for (var k in cart){
     var it = INDEX[k];
     var num = i + ") ";
     var pad = new Array(num.length + 3).join(" ");   // отступ под номером позиции + 2 пробела
-    lines.push(num + it.n + " (" + cart[k] + " " + T.pcs + ")");
+    lines.push(num + (ru ? it.ru : it.n) + " (" + cart[k] + " " + M.pcs + ")");
     lines.push(cart[k] > 1
       ? pad + plain(it.p) + " × " + cart[k] + " = " + plain(cart[k]*it.p)
       : pad + plain(it.p));                          // одна штука — цену дважды не пишем
     i++;
   }
   lines.push("");
-  lines.push(T.msgCount + t.count);
-  lines.push(T.msgSum);
+  lines.push(M.msgCount + t.count);
+  lines.push(M.msgSum);
   lines.push("  " + plain(t.sum));
   if (!takeaway){
     lines.push("");
-    lines.push(T.service + ":");
+    lines.push(M.service + ":");
     lines.push("  " + plain(t.service));
   }
   lines.push("");
-  lines.push(T.msgTotal);
+  lines.push(M.msgTotal);
   lines.push("  *" + plain(t.grand) + "*");
   lines.push("");
   lines.push("Рақмет!");
@@ -715,13 +820,13 @@ document.getElementById("orderBtn2").onclick = sendOrder;
 
 /* ---------- Переключение языка ---------- */
 function applyLang(l){
-  LANG = (l === "kk") ? "kk" : "ru";
+  LANG = normLang(l);
   T = UI[LANG];
 
   document.documentElement.lang = LANG;
   document.title = T.title;
   document.getElementById("subTitle").textContent     = T.sub;
-  document.getElementById("tableWord").textContent    = T.table + " №";
+  document.getElementById("tableWord").textContent    = T.table + " " + T.numSign;
   document.getElementById("footText").textContent     = T.foot;
   document.getElementById("barOrderText").textContent = T.order;
   document.getElementById("sheetTitle").textContent   = T.yourOrder;
@@ -743,11 +848,11 @@ function applyLang(l){
   renderBar();
   renderSheet();
 
-  /* адрес держим в курсе: русский — без параметра, казахский — ?lang=kk */
+  /* адрес держим в курсе: русский — без параметра, остальные — ?lang=kk|en */
   try {
     var q = new URLSearchParams(location.search);
     q.delete("язык");
-    if (LANG === "kk") q.set("lang", "kk"); else q.delete("lang");
+    if (LANG === "ru") q.delete("lang"); else q.set("lang", LANG);
     var qs = q.toString();
     history.replaceState(null, "", location.pathname + (qs ? "?"+qs : "") + location.hash);
   } catch (e) {}

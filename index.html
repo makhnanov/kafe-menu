@@ -22,7 +22,8 @@
     --safe-b:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0}
+  /* двойной тап не зумит страницу (пинч-зум при этом остаётся) */
+  html,body{margin:0;padding:0;touch-action:manipulation}
   body{
     background:
       radial-gradient(120% 60% at 50% 0%, #2a1605 0%, rgba(42,22,5,0) 60%),

@@ -563,18 +563,23 @@ function sendOrder(){
     var num = i + ") ";
     var pad = new Array(num.length + 3).join(" ");   // отступ под номером позиции + 2 пробела
     lines.push(num + it.n + " (" + cart[k] + " шт)");
-    lines.push(pad + plain(it.p) + " × " + cart[k] + " = " + plain(cart[k]*it.p));
+    lines.push(cart[k] > 1
+      ? pad + plain(it.p) + " × " + cart[k] + " = " + plain(cart[k]*it.p)
+      : pad + plain(it.p));                          // одна штука — цену дважды не пишем
     i++;
   }
   lines.push("");
   lines.push("Позиций: " + t.count);
-  lines.push("Сумма заказа: " + plain(t.sum));
+  lines.push("Сумма заказа:");
+  lines.push("  " + plain(t.sum));
   if (!takeaway){
     lines.push("");
-    lines.push(SERVICE_LABEL + ": " + plain(t.service));
+    lines.push(SERVICE_LABEL + ":");
+    lines.push("  " + plain(t.service));
   }
   lines.push("");
-  lines.push("💰 *ИТОГО: " + plain(t.grand) + "*");
+  lines.push("💰 *ИТОГО:*");
+  lines.push("  *" + plain(t.grand) + "*");
   lines.push("");
   lines.push("Рақмет!");
 

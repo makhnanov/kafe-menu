@@ -269,7 +269,8 @@ def build_html(count, langs, clearance, img, text_y):
 def main():
     ap = argparse.ArgumentParser(description="PDF с треугольными вкладышами в боковины")
     ap.add_argument("--count", type=int, default=7, help="сколько вкладышей (по умолчанию 7)")
-    ap.add_argument("--image", default="", help="файл с картинкой (вертикальный кадр 2:3)")
+    ap.add_argument("--image", default="img/profile-art.jpg",
+                    help="файл с картинкой (вертикальный кадр 2:3)")
     ap.add_argument("--text-y", type=float, default=83.0,
                     help="центр плашки с надписью от верха листа, мм (по умолчанию 83)")
     ap.add_argument("--langs", default="kk", help="языки пожелания: kk, ru (по умолчанию kk)")
